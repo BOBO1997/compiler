@@ -1,0 +1,92 @@
+2018/10/13
+05-181029
+楊博
+
+レポート2
+
+[問1]
+
+let rec x x = 
+	let x = 
+		let x = x - (-x) 
+		in x - (let x = -x in x - (-x)) in
+	x - (-x) in
+let x = x 125 in x - (-x)
+
+これをK正規化すると、以下のようになる。
+
+let rec x x = 
+	let x = 
+		let x = 
+			let a = -x 
+			in x - a 
+		in
+		let b = 
+			let x = -x 
+			in 
+			let c = -x 
+			in x - c 
+		in x - b 
+	in 
+	let d = -x
+	in x - d 
+in
+let x = x 125 in let e = -x in x - e
+
+これをα変換すると、
+
+let rec x x1 =
+	let x2 = 
+		let x3 = 
+			let a = -x1
+			in x1 - a 
+		in
+		let b = 
+			let x4 = -x3
+			in 
+			let c = -x4 
+			in x4 - c 
+		in x3 - b 
+	in
+	let d = -x2
+	in x2 - d 
+in
+let x5 = x 125 in let e = -x5 in x5 - e
+
+また、K正規化した式をA正規化し、適宜α変換を施すと、以下のようになる。
+
+let rec x x1 =
+	let a = -x1 in
+	let x3 = x1 - a in
+	let x4 = -x3 in
+	let c = -x4 in
+	let b = x4 - c in
+	let x2 = x3 - b in
+	let d = -x2 in
+	x2 - d 
+in
+let x5 = x 125 in 
+let e = -x5 in 
+x5 - e
+
+[問2]
+
+
+
+[問3]
+
+インライン展開に伴い、α変換しないとコードの意味が変わってしまう例としては、以下のようなものが挙げられる。
+
+let rec f x = 
+	let y = 1 in x
+in
+let y = 2 in f y
+
+をインライン展開のみ行い、α変換しないと、以下のような結果になる。
+
+let rec f x =
+	let y = 1 in x
+in
+let y = 2 in let y = 1 in y
+
+

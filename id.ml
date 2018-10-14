@@ -1,27 +1,34 @@
-type t = string (* ÊÑ¿ô¤ÎÌ¾Á° (caml2html: id_t) *)
-type l = L of string (* ¥È¥Ã¥×¥ì¥Ù¥ë´Ø¿ô¤ä¥°¥í¡¼¥Ğ¥ëÇÛÎó¤Î¥é¥Ù¥ë (caml2html: id_l) *)
+type t = string (* •Ï”‚Ì–¼‘O (caml2html: id_t) *)
+type l = L of string (* ƒgƒbƒvƒŒƒxƒ‹ŠÖ”‚âƒOƒ[ƒoƒ‹”z—ñ‚Ìƒ‰ƒxƒ‹ (caml2html: id_l) *)
 
 let rec pp_list = function
-  | [] -> ""
-  | [x] -> x
-  | x :: xs -> x ^ " " ^ pp_list xs
+	| [] -> ""
+	| [x] -> x
+	| x :: xs -> x ^ " " ^ pp_list xs
 
+(* ƒJƒEƒ“ƒ^[•Ï” *)
 let counter = ref 0
+
+(* kNormal‚Ì‚ÉV‚µ‚¢•Ï”–¼‚ğì‚é‚Æ‚«‚Ég‚¤ *)
 let genid s =
-  incr counter;
-  Printf.sprintf "%s.%d" s !counter
+	incr counter; (* ƒJƒEƒ“ƒ^[‚ğƒCƒ“ƒNƒŠƒƒ“ƒg *)
+	Printf.sprintf "%s.%d" s !counter
 
+(*  *)
 let rec id_of_typ = function
-  | Type.Unit -> "u"
-  | Type.Bool -> "b"
-  | Type.Int -> "i"
-  | Type.Float -> "d"
-  | Type.Fun _ -> "f"
-  | Type.Tuple _ -> "t"
-  | Type.Array _ -> "a" 
-  | Type.Var _ -> assert false
-let gentmp typ =
-  incr counter;
-  Printf.sprintf "T%s%d" (id_of_typ typ) !counter
+	| Type.Unit -> "u"
+	| Type.Bool -> "b"
+	| Type.Int -> "i"
+	| Type.Float -> "d"
+	| Type.Fun _ -> "f"
+	| Type.Tuple _ -> "t"
+	| Type.Array _ -> "a" 
+	| Type.Var _ -> assert false
 
+(*  *)
+let gentmp typ =
+	incr counter;
+	Printf.sprintf "T%s%d" (id_of_typ typ) !counter
+
+(* ƒfƒoƒbƒO—p *)
 let print_t = print_string

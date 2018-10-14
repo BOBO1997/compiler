@@ -27,7 +27,6 @@ type t = (* MinCamlの構文を表現するデータ型 (caml2html: syntax_t) *)
   | Get of t * t
   | Put of t * t * t
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
-and pos = { line_pos : int; char_pos : int }
 
 let rec print_indent depth =
 	if depth = 0 then ()
