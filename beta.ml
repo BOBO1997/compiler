@@ -40,5 +40,8 @@ let rec g env = function (* β簡約ルーチン本体 (caml2html: beta_g) *)
 let f print_flag t = 
 	let alpha_t = g M.empty t in
 	if print_flag = 1
-		then (KNormal.print_code 0 alpha_t; alpha_t)
+		then (print_string "<dump after beta>\n=================================================================================================\n";
+			  KNormal.print_code 0 alpha_t; 
+			  print_string "=================================================================================================\n\n";
+			  alpha_t)
 		else alpha_t

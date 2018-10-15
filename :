@@ -28,7 +28,7 @@ type t = (* K正規化後の式 (caml2html: knormal_t) *)
 	| ExtFunApp of Id.t * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
 
-(* KNormal.t -> S.t *)
+(* KNormal.t -> S *)
 (* 自由変数の集合を保持する *)
 let rec fv = function (* 式に出現する（自由な ）変数 (free variant) (caml2html: knormal_fv) *)
 	| Unit | Int(_) | Float(_) | ExtArray(_) -> S.empty
@@ -54,7 +54,7 @@ let insert_let (e, t) k = (* letを挿入する補助関数 (caml2html: knormal_insert) *
 			let e', t' = k x in
 			Let((x, t), e, e'), t'
 
-(* S.t -> Syntax.t -> (KNormal.t * Type.t) *)
+(* S -> Syntax.t -> (KNormal.t * Type.t) *)
 let rec g env = function (* K正規化ルーチン本体 (caml2html: knormal_g) *)
 	| Syntax.Unit -> Unit, Type.Unit
 	| Syntax.Bool(b) -> Int(if b then 1 else 0), Type.Int (* 論理値true, falseを整数1, 0に変換 (caml2html: knormal_bool) *)
@@ -121,7 +121,7 @@ let rec g env = function (* K正規化ルーチン本体 (caml2html: knormal_g) *)
 			let e1', t1 = g env e1 in
 			let e2', t2 = g (M.add x t env) e2 in
 			Let((x, t), e1', e2'), t2
-	| Syntax.Var(x) when M.mem x env -> Var(x), M.find x env (* env に x の束縛があれば True, なければ False : 束縛が有った時に型を env から探してくる *)
+	| Syntax.Var(x) when M.mem x env -> Var(x), M.find x env
 	| Syntax.Var(x) -> (* 外部配列の参照 (caml2html: knormal_extarray) *)
 			(match M.find x !Typing.extenv with
 			| Type.Array(_) as t -> ExtArray x, t
@@ -258,8 +258,7 @@ let rec print_kNormal depth expr =
 								Id.print_t x	 ; print_newline ();
 								print_code (depth + 1) e1; 
 								print_indent depth; print_string "<IN>"; print_newline ();
-								(*print_code (depth + 1) e2*)
-								print_code depth e2
+								print_code (depth + 1) e2
 	| Var x 			 	 -> print_string "<VAR> "		 ; Id.print_t x
 	| LetRec ({name = (x, t); args = yts; body = e1}, e2)
 						 	 -> print_string "<LETREC> "	 ; 
@@ -269,8 +268,7 @@ let rec print_kNormal depth expr =
 								print_string "</ARGS>"; print_newline ();
 								print_code (depth + 1) e1;
 								print_indent depth; print_string "<IN>"; print_newline ();
-								(*print_code (depth + 1) e2*)
-								print_code depth e2
+								print_code (depth + 1) e2
 	| App (x, xs) 		 	 -> print_string "<APP> "	; print_newline ();
 								print_indent (depth + 1); print_string "<FUN> ";
 								Id.print_t x; print_newline ();
@@ -305,10 +303,6 @@ and print_code depth expr = print_kNormal depth expr; is_already_newline newline
 
 (* int -> Syntax.t -> KNormal.t *)
 let f print_flag e =
-	let a = fst (g M.empty e) in
 	if print_flag = 1 
-		then (print_string "<dump after kNormal>\n=================================================================================================\n";
-			  print_code 0 a;
-			  print_string "=================================================================================================\n\n";
-			  a) 
-		else a
+		then (Syntax.print_code 0 e; fst (g M.empty e)) 
+		else fst (g M.empty e)

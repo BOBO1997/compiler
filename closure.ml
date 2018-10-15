@@ -108,5 +108,8 @@ let f print_flag e =
   toplevel := [];
   let e' = g M.empty S.empty e in
     if print_flag = 1
-	  then (KNormal.print_code 0 e; Prog(List.rev !toplevel, e'))
+	  then (print_string "<dump after closure>\n=================================================================================================\n";
+	  		KNormal.print_code 0 e; 
+			print_string "=================================================================================================\n\n";
+			Prog(List.rev !toplevel, e'))
       else Prog(List.rev !toplevel, e')

@@ -1,10 +1,10 @@
 let limit = ref 1000
+let syntax_flag = ref 0
 let kNormal_flag = ref 0
+let elimsubexp_flag = ref 0
 let alpha_flag = ref 0
 let beta_flag = ref 0
 let closure_flag = ref 0
-
-
 
 let rec iter n e = (* 最適化処理をくりかえす (caml2html: main_iter) *)
 	Format.eprintf "iteration %d@." n;
@@ -19,14 +19,15 @@ let lexbuf outchan l = (* バッファをコンパイルしてチャンネルへ出力する (caml2htm
 	try
 	Emit.f outchan
 		(RegAlloc.f
-			 (Simm.f
-					(Virtual.f
-						 (Closure.f !closure_flag
-								(iter !limit
-									 (Alpha.f !alpha_flag
-											(KNormal.f !kNormal_flag
-												 (Typing.f
-														(Parser.exp Lexer.token l)))))))))
+			(Simm.f
+				(Virtual.f
+					(Closure.f !closure_flag
+						(iter !limit
+							(Alpha.f !alpha_flag
+								(Elimsubexp.f !elimsubexp_flag (* ここはalphaの後にやったほうがいい *)
+									(KNormal.f !kNormal_flag
+										(Typing.f !syntax_flag
+											(Parser.exp Lexer.token l))))))))))
 	with
 	| Parsing.Parse_error -> print_string "Parsing Error ...\n"
 
@@ -46,8 +47,10 @@ let () = (* ここからコンパイラの実行が開始される (caml2html: main_entry) *)
 	Arg.parse
 		[("-inline", Arg.Int(fun i -> Inline.threshold := i), "maximum size of functions inlined");
 		 ("-iter", Arg.Int(fun i -> limit := i), "maximum number of optimizations iterated");
-		 ("-knormal", Arg.Unit(fun () -> kNormal_flag := 1), "dump code before kNormal");
-		 ("-kNormal", Arg.Unit(fun () -> kNormal_flag := 1), "dump code before kNormal");
+		 ("-syntax", Arg.Unit(fun () -> syntax_flag := 1), "dump code after type checking");
+		 ("-knormal", Arg.Unit(fun () -> kNormal_flag := 1), "dump code after kNormal");
+		 ("-kNormal", Arg.Unit(fun () -> kNormal_flag := 1), "dump code after kNormal");
+		 ("-elimsubexp", Arg.Unit(fun () -> kNormal_flag := 1), "dump code after elimsubexp");
 		 ("-alpha", Arg.Unit(fun () -> alpha_flag := 1), "dump code after alpha");
 		 ("-beta", Arg.Unit(fun () -> beta_flag := 1), "dump code after beta");
 		 ("-closure", Arg.Unit(fun () -> closure_flag := 1), "dump code after closure")

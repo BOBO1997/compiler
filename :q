@@ -171,7 +171,7 @@ let f print_flag e =
 	(try unify Type.Unit (g M.empty e)
 	with Unify _ -> failwith "top level does not have type unit");
 	(if print_flag = 1 
-	 then (print_string "<dump Syntax.t>\n=================================================================================================\n"; 
+	 then (print_string "=================================================================================================\n"; 
 	       (Syntax.print_code 0 e); 
 		   print_string "=================================================================================================\n\n") 
 	 else ());
