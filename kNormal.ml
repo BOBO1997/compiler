@@ -48,11 +48,15 @@ let rec fv = function (* 式に出現する（自由な ）変数 (free variant) (caml2html: 
 (* (KNormal.t * Type.t) -> (Id.t -> (KNormal.t * Type.t)) -> (KNormal.t * Type.t) *)
 let insert_let (e, t) k = (* letを挿入する補助関数 (caml2html: knormal_insert) *)
 	match e with
+	| Int(i) -> 
+		let name = Id.gentmp_int i in
+		let e', t' = k name in
+		Let ((name, t), e, e'), t' (* cseのための準備 *)
 	| Var(x) -> k x
 	| _ ->
-			let x = Id.gentmp t in
-			let e', t' = k x in
-			Let((x, t), e, e'), t'
+		let x = Id.gentmp t in
+		let e', t' = k x in
+		Let ((x, t), e, e'), t'
 
 (* S.t -> Syntax.t -> (KNormal.t * Type.t) *)
 let rec g env = function (* K正規化ルーチン本体 (caml2html: knormal_g) *)
@@ -67,7 +71,7 @@ let rec g env = function (* K正規化ルーチン本体 (caml2html: knormal_g) *)
 	| Syntax.Add(e1, e2) -> (* 足し算のK正規化 (caml2html: knormal_add) *)
 			insert_let (g env e1)
 				(fun x -> insert_let (g env e2)
-						(fun y -> Add(x, y), Type.Int))
+						(fun y -> Add(x, y), Type.Int)) (* Add(正規化されたe1, 正規化されたe2) *)
 	| Syntax.Sub(e1, e2) ->
 			insert_let (g env e1)
 				(fun x -> insert_let (g env e2)
@@ -119,8 +123,14 @@ let rec g env = function (* K正規化ルーチン本体 (caml2html: knormal_g) *)
 	| Syntax.If(e1, e2, e3) -> g env (Syntax.If(Syntax.Eq(e1, Syntax.Bool(false)), e3, e2)) (* 比較のない分岐を変換 (caml2html: knormal_if) *)
 	| Syntax.Let((x, t), e1, e2) ->
 			let e1', t1 = g env e1 in
-			let e2', t2 = g (M.add x t env) e2 in
-			Let((x, t), e1', e2'), t2
+			(*match e1' with
+			| Int(i) -> 
+				let x_int = Id.gentmp_int i in
+				let e2', t2 = g (M.add x_int t env) e2 in
+				Let((x_int, t), e1', e2'), t2
+			| _ -> *)(
+				let e2', t2 = g (M.add x t env) e2 in
+				Let((x, t), e1', e2'), t2)
 	| Syntax.Var(x) when M.mem x env -> Var(x), M.find x env (* env に x の束縛があれば True, なければ False : 束縛が有った時に型を env から探してくる *)
 	| Syntax.Var(x) -> (* 外部配列の参照 (caml2html: knormal_extarray) *)
 			(match M.find x !Typing.extenv with
@@ -258,7 +268,9 @@ let rec print_kNormal depth expr =
 								Id.print_t x	 ; print_newline ();
 								print_code (depth + 1) e1; 
 								print_indent depth; print_string "<IN>"; print_newline ();
-								(*print_code (depth + 1) e2*)
+								(*
+								print_code (depth + 1) e2
+								*)
 								print_code depth e2
 	| Var x 			 	 -> print_string "<VAR> "		 ; Id.print_t x
 	| LetRec ({name = (x, t); args = yts; body = e1}, e2)

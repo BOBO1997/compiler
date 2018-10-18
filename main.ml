@@ -23,8 +23,10 @@ let lexbuf outchan l = (* バッファをコンパイルしてチャンネルへ出力する (caml2htm
 				(Virtual.f
 					(Closure.f !closure_flag
 						(iter !limit
-							(Alpha.f !alpha_flag
-								(Elimsubexp.f !elimsubexp_flag (* ここはalphaの後にやったほうがいい *)
+						
+							(Elimsubexp.f !elimsubexp_flag (* ここはalphaの後にやったほうがいい *)
+						
+								(Alpha.f !alpha_flag
 									(KNormal.f !kNormal_flag
 										(Typing.f !syntax_flag
 											(Parser.exp Lexer.token l))))))))))
@@ -50,8 +52,8 @@ let () = (* ここからコンパイラの実行が開始される (caml2html: main_entry) *)
 		 ("-syntax", Arg.Unit(fun () -> syntax_flag := 1), "dump code after type checking");
 		 ("-knormal", Arg.Unit(fun () -> kNormal_flag := 1), "dump code after kNormal");
 		 ("-kNormal", Arg.Unit(fun () -> kNormal_flag := 1), "dump code after kNormal");
-		 ("-elimsubexp", Arg.Unit(fun () -> kNormal_flag := 1), "dump code after elimsubexp");
 		 ("-alpha", Arg.Unit(fun () -> alpha_flag := 1), "dump code after alpha");
+		 ("-elimsubexp", Arg.Unit(fun () -> elimsubexp_flag := 1), "dump code after elimsubexp");
 		 ("-beta", Arg.Unit(fun () -> beta_flag := 1), "dump code after beta");
 		 ("-closure", Arg.Unit(fun () -> closure_flag := 1), "dump code after closure")
 		 ]

@@ -9,10 +9,14 @@ let rec pp_list = function
 (* カウンター変数 *)
 let counter = ref 0
 
-(* kNormalの時に新しい変数名を作るときに使う *)
+(* alpha変換用 *)
 let genid s =
-	incr counter; (* カウンターをインクリメント *)
-	Printf.sprintf "%s.%d" s !counter
+	if (String.get s 0) = 'I'
+	then
+		Printf.sprintf "%s" s
+	else
+		(incr counter; (* カウンターをインクリメント *)
+		Printf.sprintf "%s.%d" s !counter)
 
 (*  *)
 let rec id_of_typ = function
@@ -25,10 +29,13 @@ let rec id_of_typ = function
 	| Type.Array _ -> "a" 
 	| Type.Var _ -> assert false
 
-(*  *)
+(* k正規化用 *)
 let gentmp typ =
 	incr counter;
 	Printf.sprintf "T%s%d" (id_of_typ typ) !counter
+
+let gentmp_int value =
+	Printf.sprintf "Int%d" value
 
 (* デバッグ用 *)
 let print_t = print_string
