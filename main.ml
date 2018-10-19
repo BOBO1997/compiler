@@ -1,15 +1,23 @@
 let limit = ref 1000
 let syntax_flag = ref 0
 let kNormal_flag = ref 0
-let elimsubexp_flag = ref 0
+let cse_flag = ref 0
 let alpha_flag = ref 0
 let beta_flag = ref 0
+let inline_flag = ref 0
 let closure_flag = ref 0
 
 let rec iter n e = (* 最適化処理をくりかえす (caml2html: main_iter) *)
 	Format.eprintf "iteration %d@." n;
 	if n = 0 then e else
-	let e' = Elim.f (ConstFold.f (Inline.f (Assoc.f (Beta.f !beta_flag e)))) in
+	let e' = 
+			(Elim.f 
+				(ConstFold.f 
+					(Inline.f !inline_flag 
+						(Assoc.f 
+							(Beta.f !beta_flag 
+								(ComSubexpElim.f !cse_flag
+									e)))))) in
 	if e = e' then e else
 	iter (n - 1) e'
 
@@ -23,13 +31,10 @@ let lexbuf outchan l = (* バッファをコンパイルしてチャンネルへ出力する (caml2htm
 				(Virtual.f
 					(Closure.f !closure_flag
 						(iter !limit
-						
-							(Elimsubexp.f !elimsubexp_flag (* ここはalphaの後にやったほうがいい *)
-						
-								(Alpha.f !alpha_flag
-									(KNormal.f !kNormal_flag
-										(Typing.f !syntax_flag
-											(Parser.exp Lexer.token l))))))))))
+							(Alpha.f !alpha_flag
+								(KNormal.f !kNormal_flag
+									(Typing.f !syntax_flag
+										(Parser.exp Lexer.token l)))))))))
 	with
 	| Parsing.Parse_error -> print_string "Parsing Error ...\n"
 
@@ -47,15 +52,16 @@ let file f = (* ファイルをコンパイルしてファイルに出力する (caml2html: main_file
 let () = (* ここからコンパイラの実行が開始される (caml2html: main_entry) *)
 	let files = ref [] in
 	Arg.parse
-		[("-inline", Arg.Int(fun i -> Inline.threshold := i), "maximum size of functions inlined");
+		[("-inline_size", Arg.Int(fun i -> Inline.threshold := i), "maximum size of functions inlined");
 		 ("-iter", Arg.Int(fun i -> limit := i), "maximum number of optimizations iterated");
 		 ("-syntax", Arg.Unit(fun () -> syntax_flag := 1), "dump code after type checking");
 		 ("-knormal", Arg.Unit(fun () -> kNormal_flag := 1), "dump code after kNormal");
 		 ("-kNormal", Arg.Unit(fun () -> kNormal_flag := 1), "dump code after kNormal");
 		 ("-alpha", Arg.Unit(fun () -> alpha_flag := 1), "dump code after alpha");
-		 ("-elimsubexp", Arg.Unit(fun () -> elimsubexp_flag := 1), "dump code after elimsubexp");
+		 ("-cse", Arg.Unit(fun () -> cse_flag := 1), "dump code after ComSubexpElim");
 		 ("-beta", Arg.Unit(fun () -> beta_flag := 1), "dump code after beta");
-		 ("-closure", Arg.Unit(fun () -> closure_flag := 1), "dump code after closure")
+		 ("-inline", Arg.Unit(fun () -> inline_flag := 1), "dump code after inline");
+		 ("-closure", Arg.Unit(fun () -> closure_flag := 1), "dump code before closure")
 		 ]
 		(fun s -> files := !files @ [s])
 		("Mitou Min-Caml Compiler (C) Eijiro Sumii\n" ^

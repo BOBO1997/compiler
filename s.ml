@@ -1,5 +1,5 @@
 (* customized version of Set *)
-
+(* 主に自由変数を格納する *)
 module S =
   Set.Make
     (struct

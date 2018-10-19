@@ -10,7 +10,7 @@ let rec f = function (* ネストしたletの簡約 (caml2html: assoc_f) *)
         | Let(yt, e3, e4) -> Let(yt, e3, insert e4)
         | LetRec(fundefs, e) -> LetRec(fundefs, insert e)
         | LetTuple(yts, z, e) -> LetTuple(yts, z, insert e)
-        | e -> Let(xt, e, f e2) in
+        | e -> Let(xt, e, f e2) in (* let xt = e1 in e2 の中のe1にletが含まれない形になるまで再帰を繰り返す *)
       insert (f e1)
   | LetRec({ name = xt; args = yts; body = e1 }, e2) ->
       LetRec({ name = xt; args = yts; body = f e1 }, f e2)

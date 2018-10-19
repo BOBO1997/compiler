@@ -104,6 +104,128 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure
   | KNormal.ExtArray(x) -> ExtArray(Id.L(x))
   | KNormal.ExtFunApp(x, ys) -> AppDir(Id.L("min_caml_" ^ x), ys)
 
+(* ここからデバッグ用print関数 *)
+
+let rec print_indent depth =
+	if depth = 0 then ()
+	else (print_string ".   "; print_indent (depth - 1))
+
+let print_t depth x =
+	print_indent depth;
+	Id.print_t x
+
+let print_t_tuple (x, t) = Id.print_t x; print_string ", "
+
+let print_closure 
+
+let newline_flag = ref 0
+
+let is_already_newline flag = 
+	if !flag = 0 then (print_newline (); flag := 1)
+	else ()
+
+let rec print_kNormal depth expr =
+	print_indent depth; newline_flag := 0;
+	match expr with
+	| Unit 		 -> print_string "<UNIT> "
+	| Int i 	 -> print_string "<INT> "; print_string (string_of_int i)
+	| Float d 	 -> print_string "<FLOAT> "; print_string (string_of_float d)
+	| Neg x      -> print_string "<NEG> "; Id.print_t x
+	| Add (x, y) -> print_string "<ADD> "; print_newline ();
+					print_t (depth + 1) x; print_newline ();
+					print_t (depth + 1) y
+	| Sub (x, y) -> print_string "<SUB> "; print_newline ();
+					print_t (depth + 1) x; print_newline ();
+					print_t (depth + 1) y
+	| Mul (x, y) -> print_string "<MUL> "; print_newline ();
+					print_t (depth + 1) x; print_newline ();
+					print_t (depth + 1) y
+	| Div (x, y) -> print_string "<DIV> "; print_newline ();
+					print_t (depth + 1) x; print_newline ();
+					print_t (depth + 1) y
+	| FNeg x  	 -> print_string "<FNEG> "; Id.print_t x
+	| FAdd (x, y)-> print_string "<FADD> "; print_newline ();
+					print_t (depth + 1)  x; print_newline ();
+					print_t (depth + 1)  y
+	| FSub (x, y)-> print_string "<FSUB> "; print_newline ();
+					print_t (depth + 1)  x; print_newline ();
+					print_t (depth + 1)  y
+	| FMul (x, y)-> print_string "<FMUL> "; print_newline ();
+					print_t (depth + 1)  x; print_newline ();
+					print_t (depth + 1)  y
+	| FDiv (x, y)-> print_string "<FDIV> "; print_newline ();
+					print_t (depth + 1)  x; print_newline ();
+					print_t (depth + 1)  y
+	| IfEq (x, y, e1, e2)	 -> print_string "<IF> "; print_newline ();
+								print_indent (depth + 1); print_string "<EQ> "; print_newline ();
+								print_t (depth + 2)  x; print_newline ();
+								print_t (depth + 2)  y; print_newline ();
+								print_string "<THEN> "; print_newline ();
+								print_code (depth + 1) e1;
+								print_string "<ELSE> "; print_newline ();
+								print_code (depth + 1) e2
+	| IfLE (x, y, e1, e2)	 -> print_string "<IF> "; print_newline ();
+								print_indent (depth + 1); print_string "<LE> "; print_newline ();
+								print_t (depth + 2)  x; print_newline ();
+								print_t (depth + 2)  y; print_newline ();
+								print_code (depth + 1) e1;
+								print_code (depth + 1) e2
+	| Let ((x, y), e1, e2)	 -> print_string "<LET> "	 ;
+								Id.print_t x	 ; print_newline ();
+								print_code (depth + 1) e1; 
+								print_indent depth; print_string "<IN>"; print_newline ();
+								(*
+								print_code (depth + 1) e2
+								*)
+								print_code depth e2
+	| Var x 			 	 -> print_string "<VAR> "		 ; Id.print_t x
+	| MakeCls ((f, t), {entry = ; actual_fv = fv_list}, exp)
+							 -> print_string "<MakeCls>";
+							 	Id.print_t f; print_newline ();
+								print_indent (depth + 1); print_string "<CLOSURE>";
+								
+	| LetRec ({name = (x, t); args = yts; body = e1}, e2)
+						 	 -> print_string "<LETREC> "	 ; 
+								Id.print_t x    ; print_newline ();
+								print_indent (depth + 1); print_string "<ARGS> ";
+								List.iter print_t_tuple yts;
+								print_string "</ARGS>"; print_newline ();
+								print_code (depth + 1) e1;
+								print_indent depth; print_string "<IN>"; print_newline ();
+								(*print_code (depth + 1) e2*)
+								print_code depth e2
+	| App (x, xs) 		 	 -> print_string "<APP> "	; print_newline ();
+								print_indent (depth + 1); print_string "<FUN> ";
+								Id.print_t x; print_newline ();
+								print_indent (depth + 1); print_string "<ARGS> ";
+								List.iter (fun x -> Id.print_t x; print_string ", ") xs;
+								print_string "</ARGS> ";
+	| Tuple xs  		 	 -> print_string "<TUPLE> "	 ; print_newline ();
+								List.iter (fun x -> Id.print_t x; print_string ", ") xs
+	| LetTuple (xts, y, e)	 -> print_string "<LETTUPLE> " ;
+								print_indent (depth + 1); print_string "<TUPLE> ";
+								List.iter print_t_tuple xts;
+								print_string "</TUPLE>"; print_newline ();
+								print_t (depth + 1)  y; print_newline ();
+								print_code (depth + 1)  e
+	| Get (x, y)     		 -> print_string "<GET> " ; print_newline ();
+								print_t (depth + 1)  x; print_newline ();
+								print_t (depth + 1)  y
+	| Put (x, y, z) 		 -> print_string "<PUT> " ; print_newline ();
+								print_t (depth + 1)  x; print_newline ();
+								print_t (depth + 1)  y; print_newline ();
+								print_t (depth + 1)  z
+	| ExtArray x 			 -> print_string "<EXTARRAY> " ; 
+								Id.print_t x
+	| ExtFunApp (x, ys) 	 -> print_string "<EXTFUNAPP> "; print_newline ();
+								print_indent (depth + 1); print_string "<FUN> ";
+								Id.print_t x; print_newline ();
+								print_indent (depth + 1); print_string "<ARGS> ";
+								List.iter (fun y -> Id.print_t y; print_string ", ") ys;
+								print_string "</ARGS> "
+
+and print_code depth expr = print_kNormal depth expr; is_already_newline newline_flag
+
 let f print_flag e =
   toplevel := [];
   let e' = g M.empty S.empty e in

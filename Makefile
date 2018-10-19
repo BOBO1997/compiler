@@ -28,7 +28,7 @@ parser.mly lexer.mll \
 typing.mli typing.ml \
 kNormal.mli kNormal.ml \
 alpha.mli alpha.ml \
-elimsubexp.mli elimsubexp.ml \
+comSubexpElim.mli comSubexpElim.ml \
 beta.mli beta.ml \
 assoc.mli assoc.ml \
 inline.mli inline.ml \

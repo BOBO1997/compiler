@@ -5,4 +5,4 @@ let c =
 	x + 2
 in
 let d = x + 2 in
-print_int 1
+print_int (c + d)

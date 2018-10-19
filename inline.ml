@@ -29,4 +29,11 @@ let rec g env = function (* インライン展開ルーチン本体 (caml2html: inline_g) *)
   | LetTuple(xts, y, e) -> LetTuple(xts, y, g env e)
   | e -> e
 
-let f e = g M.empty e
+let f print_flag e = 
+	let exp = g M.empty e in
+	if print_flag = 1 
+		then (print_string "<dump after inline>\n=================================================================================================\n";
+			  print_code 0 exp;
+			  print_string "=================================================================================================\n\n";
+			  exp)
+		else exp

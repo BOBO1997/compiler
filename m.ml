@@ -1,5 +1,5 @@
 (* customized version of Map *)
-
+(* 主に型を格納するために用いられる *)
 module M =
   Map.Make
     (struct
