@@ -39,3 +39,5 @@ let gentmp_int value =
 
 (* デバッグ用 *)
 let print_t = print_string
+
+let print_l (L l) = print_string l

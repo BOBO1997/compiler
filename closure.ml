@@ -114,9 +114,14 @@ let print_t depth x =
 	print_indent depth;
 	Id.print_t x
 
+let rec print_id_list fv_list =
+	List.iter (fun id -> Id.print_t id; print_string ", ") fv_list
+
 let print_t_tuple (x, t) = Id.print_t x; print_string ", "
 
-let print_closure 
+let print_closure {entry = label; actual_fv = fv_list} =
+	Id.print_t label;
+	print_id_list fv_list;
 
 let newline_flag = ref 0
 
@@ -160,7 +165,7 @@ let rec print_kNormal depth expr =
 								print_indent (depth + 1); print_string "<EQ> "; print_newline ();
 								print_t (depth + 2)  x; print_newline ();
 								print_t (depth + 2)  y; print_newline ();
-								print_string "<THEN> "; print_newline ();
+								print_indent depth; print_string "<THEN> "; print_newline ();
 								print_code (depth + 1) e1;
 								print_string "<ELSE> "; print_newline ();
 								print_code (depth + 1) e2
@@ -168,7 +173,9 @@ let rec print_kNormal depth expr =
 								print_indent (depth + 1); print_string "<LE> "; print_newline ();
 								print_t (depth + 2)  x; print_newline ();
 								print_t (depth + 2)  y; print_newline ();
+								print_string "<THEN> "; print_newline ();
 								print_code (depth + 1) e1;
+								print_string "<ELSE> "; print_newline ();
 								print_code (depth + 1) e2
 	| Let ((x, y), e1, e2)	 -> print_string "<LET> "	 ;
 								Id.print_t x	 ; print_newline ();
@@ -179,27 +186,27 @@ let rec print_kNormal depth expr =
 								*)
 								print_code depth e2
 	| Var x 			 	 -> print_string "<VAR> "		 ; Id.print_t x
-	| MakeCls ((f, t), {entry = ; actual_fv = fv_list}, exp)
+	| MakeCls ((f, t), {entry = entry; actual_fv = fv_list}, exp)
 							 -> print_string "<MakeCls>";
 							 	Id.print_t f; print_newline ();
-								print_indent (depth + 1); print_string "<CLOSURE>";
-								
-	| LetRec ({name = (x, t); args = yts; body = e1}, e2)
-						 	 -> print_string "<LETREC> "	 ; 
-								Id.print_t x    ; print_newline ();
-								print_indent (depth + 1); print_string "<ARGS> ";
-								List.iter print_t_tuple yts;
-								print_string "</ARGS>"; print_newline ();
-								print_code (depth + 1) e1;
-								print_indent depth; print_string "<IN>"; print_newline ();
-								(*print_code (depth + 1) e2*)
-								print_code depth e2
-	| App (x, xs) 		 	 -> print_string "<APP> "	; print_newline ();
+								print_indent (depth + 1); print_string "<CLOSURE> ";
+								print_indent (depth + 2); print_string "<entry : > "; 
+								Id.print_l entry; print_newline ();
+								print_indent (depth + 2); print_stirng "<antual_fv : >";
+								print_id_list fv_list; print_newline ();
+								print_code (depth + 1) exp
+	| AppCls (x, xs) 		 -> print_string "<APPCLS> "; print_newline ();
 								print_indent (depth + 1); print_string "<FUN> ";
 								Id.print_t x; print_newline ();
 								print_indent (depth + 1); print_string "<ARGS> ";
 								List.iter (fun x -> Id.print_t x; print_string ", ") xs;
-								print_string "</ARGS> ";
+								print_string "</ARGS> "
+	| AppDir (x, xs)		 -> print_string "<APPDIR> "; print_newline ();
+								print_indent (depth + 1); print_string "<FUN> ";
+								Id.print_l x; print_newline ();
+								print_indent (depth + 1); print_string "<ARGS> ";
+								print_id_list xs;
+								priint_string "</ARGS>"
 	| Tuple xs  		 	 -> print_string "<TUPLE> "	 ; print_newline ();
 								List.iter (fun x -> Id.print_t x; print_string ", ") xs
 	| LetTuple (xts, y, e)	 -> print_string "<LETTUPLE> " ;
